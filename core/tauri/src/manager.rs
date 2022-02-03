@@ -428,7 +428,7 @@ impl<R: Runtime> WindowManager<R> {
           let _ = window.eval(&format!(
             r#"console.error({})"#,
             JsonValue::String(error.to_string())
-          ));
+          ), |_| ());
         }
       }
     })
@@ -838,7 +838,7 @@ fn on_window_event<R: Runtime>(
         window.eval(&format!(
           r#"window.__TAURI__.__windows = window.__TAURI__.__windows.filter(w => w.label !== "{}");"#,
           label
-        ))?;
+        ), |_| ())?;
       }
     }
     WindowEvent::Focused(focused) => window.emit_and_trigger(

@@ -982,12 +982,29 @@ pub enum WindowMessage {
   RequestRedraw,
 }
 
-#[derive(Debug, Clone)]
 pub enum WebviewMessage {
-  EvaluateScript(String),
+  EvaluateScript(String, Box<dyn FnOnce(String) -> () + Send>),
   #[allow(dead_code)]
   WebviewEvent(WebviewEvent),
   Print,
+}
+
+impl Clone for WebviewMessage {
+  fn clone(&self) -> Self {
+    match self {
+      WebviewMessage::EvaluateScript(_, _) => unimplemented!(),
+      other => other.clone(),
+    }
+  }
+}
+
+impl fmt::Debug for WebviewMessage {
+  fn fmt(&self, f: &mut fmt::Formatter) -> std::result::Result<(), fmt::Error> {
+    match self {
+      WebviewMessage::EvaluateScript(js, _) => js.fmt(f),
+      other => other.fmt(f),
+    }
+  }
 }
 
 #[allow(dead_code)]
@@ -1414,12 +1431,12 @@ impl Dispatch for WryDispatcher {
     )
   }
 
-  fn eval_script<S: Into<String>>(&self, script: S) -> Result<()> {
+  fn eval_script<S: Into<String>>(&self, script: S, callback: impl FnOnce(String) -> () + Send + 'static) -> Result<()> {
     send_user_message(
       &self.context,
       Message::Webview(
         self.window_id,
-        WebviewMessage::EvaluateScript(script.into()),
+        WebviewMessage::EvaluateScript(script.into(),  Box::new(callback)),
       ),
     )
   }
@@ -2150,14 +2167,14 @@ fn handle_user_message(
       }
     }
     Message::Webview(id, webview_message) => match webview_message {
-      WebviewMessage::EvaluateScript(script) => {
+      WebviewMessage::EvaluateScript(script, callback) => {
         if let Some(WindowHandle::Webview(webview)) = windows
           .lock()
           .expect("poisoned webview collection")
           .get(&id)
           .map(|w| &w.inner)
         {
-          if let Err(e) = webview.evaluate_script(&script) {
+          if let Err(e) = webview.evaluate_script(&script, callback) {
             eprintln!("{}", e);
           }
         }

@@ -29,12 +29,12 @@ impl Cmd {
     match self {
       Self::Listen { event, handler } => {
         let event_id = rand::random();
-        window.eval(&listen_js(&window, event.clone(), event_id, handler))?;
+        window.eval(&listen_js(&window, event.clone(), event_id, handler), |_| ())?;
         window.register_js_listener(event, event_id);
         Ok(event_id.into())
       }
       Self::Unlisten { event_id } => {
-        window.eval(&unlisten_js(&window, event_id))?;
+        window.eval(&unlisten_js(&window, event_id), |_| ())?;
         window.unregister_js_listener(event_id);
         Ok(().into())
       }

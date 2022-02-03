@@ -281,7 +281,7 @@ impl<R: Runtime> Window<R> {
       self.manager.event_emit_function_name(),
       serde_json::to_string(event)?,
       serde_json::to_value(payload)?,
-    ))?;
+    ), |_| ())?;
     Ok(())
   }
 
@@ -328,8 +328,8 @@ impl<R: Runtime> Window<R> {
   }
 
   /// Evaluates JavaScript on this window.
-  pub fn eval(&self, js: &str) -> crate::Result<()> {
-    self.window.dispatcher.eval_script(js).map_err(Into::into)
+  pub fn eval(&self, js: &str, callback: impl FnOnce(String) -> () + Send + 'static) -> crate::Result<()> {
+    self.window.dispatcher.eval_script(js, callback).map_err(Into::into)
   }
 
   /// Registers a window event listener.

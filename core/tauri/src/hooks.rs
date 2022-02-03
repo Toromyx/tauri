@@ -217,7 +217,7 @@ pub fn window_invoke_responder<R: Runtime>(
       .expect("unable to serialize shortcut string to json"),
   };
 
-  let _ = window.eval(&callback_string);
+  let _ = window.eval(&callback_string, |_| ());
 }
 
 /// An invoke message.

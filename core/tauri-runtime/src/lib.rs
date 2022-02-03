@@ -518,7 +518,7 @@ pub trait Dispatch: Debug + Clone + Send + Sized + 'static {
   fn start_dragging(&self) -> crate::Result<()>;
 
   /// Executes javascript on the window this [`Dispatch`] represents.
-  fn eval_script<S: Into<String>>(&self, script: S) -> crate::Result<()>;
+  fn eval_script<S: Into<String>>(&self, script: S, callback: impl FnOnce(String) -> () + Send + 'static) -> crate::Result<()>;
 
   /// Applies the specified `update` to the menu item associated with the given `id`.
   fn update_menu_item(&self, id: u16, update: menu::MenuUpdate) -> crate::Result<()>;
